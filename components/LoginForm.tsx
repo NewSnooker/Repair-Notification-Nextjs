@@ -25,16 +25,13 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import PasswordInput from "./PasswordInput";
-import { BASE_URL, TOKEN_KEY } from "@/lib/config";
+import { API_URL, TOKEN_KEY } from "@/lib/config";
 
 const formSchema = z.object({
-  email: z
-    .string()
-    .email({ message: "กรุณากรอกอีเมลให้ถูกต้อง" })
-    .max(100, { message: "อีเมลต้องไม่เกิน 50 ตัวอักษร" }),
+  username: z.string().max(100, { message: "ชื่อต้องไม่เกิน 50 ตัวอักษร" }),
   password: z
     .string()
-    .min(6, { message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร" })
+    .min(5, { message: "รหัสผ่านต้องมีอย่างน้อย 5 ตัวอักษร" })
     .max(100, { message: "รหัสผ่านต้องไม่เกิน 20 ตัวอักษร" })
     .regex(/[a-zA-Z0-9]/, {
       message: "รหัสผ่านต้องมีอย่างน้อย 1 ตัวอักษร และ 1 ตัวเลข",
@@ -45,17 +42,18 @@ export default function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
+
   const router = useRouter();
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const response = await axios.post(`${BASE_URL}/api/user/signin`, values);
+      const response = await axios.post(`${API_URL}/api/user/signin`, values);
       if (response.data.token !== undefined) {
         localStorage.setItem(TOKEN_KEY!, response.data.token);
-        router.push("/dashboard");
+        router.push("/backoffice/dashboard");
         toast.success("ล็อกอินสำเร็จ!", {
           description: "ระบบกำลังนำคุณเข้าสู่บัญชีของคุณ",
         });
@@ -80,16 +78,16 @@ export default function LoginForm() {
             <div className="grid gap-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="username"
                 render={({ field }) => (
                   <FormItem className="grid gap-2">
-                    <FormLabel htmlFor="email">Email</FormLabel>
+                    <FormLabel htmlFor="username">Username</FormLabel>
                     <FormControl>
                       <Input
-                        id="email"
-                        placeholder="johndoe@mail.com"
-                        type="email"
-                        autoComplete="email"
+                        id="username"
+                        placeholder="username"
+                        type="text"
+                        autoComplete="username"
                         {...field}
                       />
                     </FormControl>

@@ -9,11 +9,13 @@ export default function PasswordInput({
   id,
   placeholder,
   autoComplete,
+  disabled,
 }: {
   field: any;
   id: string;
   placeholder?: string;
   autoComplete?: string;
+  disabled?: boolean;
 }) {
   const [passType, setPassType] = useState("password");
 
@@ -26,6 +28,7 @@ export default function PasswordInput({
         {...field}
         autoComplete={autoComplete || "current-password"}
         className="pr-10"
+        disabled={disabled}
       />
       <button
         type="button"

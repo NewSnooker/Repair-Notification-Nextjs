@@ -1,6 +1,5 @@
 "use client";
 import axios from "axios";
-
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,8 +23,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import PasswordInput from "./PasswordInput";
+import PasswordInput from "../PasswordInput";
 import { API_URL, TOKEN_KEY } from "@/lib/config";
+import React, { useState } from "react"; // เพิ่ม useState
 
 const formSchema = z.object({
   username: z.string().max(100, { message: "ชื่อต้องไม่เกิน 50 ตัวอักษร" }),
@@ -39,6 +39,9 @@ const formSchema = z.object({
 });
 
 export default function LoginForm() {
+  const [isLoading, setIsLoading] = useState(false); // ✅ เพิ่ม state โหลดดิ้ง
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,25 +50,31 @@ export default function LoginForm() {
     },
   });
 
-  const router = useRouter();
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      setIsLoading(true); // ✅ เริ่มโหลด
       const response = await axios.post(`${API_URL}/api/user/signin`, values);
       if (response.data.token !== undefined) {
         localStorage.setItem(TOKEN_KEY!, response.data.token);
+        localStorage.setItem("bun_service_name", response.data.user.username);
+        localStorage.setItem("bun_service_level", response.data.user.level);
         router.push("/backoffice/dashboard");
         toast.success("ล็อกอินสำเร็จ!", {
           description: "ระบบกำลังนำคุณเข้าสู่บัญชีของคุณ",
         });
+      } else {
+        toast.error("เกิดข้อผิดพลาดในการล็อกอิน");
       }
     } catch (error) {
       console.error("Form submission error", error);
       toast.error("เกิดข้อผิดพลาดในการล็อกอิน");
+    } finally {
+      setIsLoading(false); // ✅ หยุดโหลด ไม่ว่าจะสำเร็จหรือไม่
     }
   }
 
   return (
-    <Card className="">
+    <Card>
       <CardHeader>
         <CardTitle className="text-2xl">เข้าสู่ระบบ</CardTitle>
         <CardDescription>
@@ -76,6 +85,7 @@ export default function LoginForm() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid gap-4">
+              {/* Username */}
               <FormField
                 control={form.control}
                 name="username"
@@ -88,6 +98,7 @@ export default function LoginForm() {
                         placeholder="username"
                         type="text"
                         autoComplete="username"
+                        disabled={isLoading} // ✅ ปิดช่องระหว่างโหลด
                         {...field}
                       />
                     </FormControl>
@@ -95,6 +106,8 @@ export default function LoginForm() {
                   </FormItem>
                 )}
               />
+
+              {/* Password */}
               <FormField
                 control={form.control}
                 name="password"
@@ -115,16 +128,19 @@ export default function LoginForm() {
                         id="password"
                         placeholder="******"
                         autoComplete="current-password"
+                        disabled={isLoading} // ✅ ปิดช่องระหว่างโหลด
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Login
+
+              {/* Submit button */}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "กำลังเข้าสู่ระบบ..." : "Login"}
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" disabled={isLoading}>
                 Login with Google
               </Button>
             </div>
